@@ -6,6 +6,6 @@ from . import views
 app_name = 'chat'
 urlpatterns = [
     path('', views.home, name='home'),
-    path('posts/add', views.add_post, name='add_post'),
-    path('comments/add/<post_id>', views.add_comment, name='add_comment')
+    path('post/create/', views.create_post, name='create_post'),
+    path('post/<int:post_id>/comment/', views.comment_post, name='comment_post'),
 ]

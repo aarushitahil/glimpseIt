@@ -1,57 +1,67 @@
 {% extends 'base.html' %}
 
-{% block title %}
-	Feeds
-{% endblock %}
+{% block title %}Glimpset Friends{% endblock %}
 
 {% block content %}
-	<div class="row">
-		<div class="col"></div>
-		<div class="col-md-10">
-			<h1 class="py-3 px-2 bg-dark text-light">Following</h1>
-			<div class="container">
-				{% for user in users_followed %}
-					<div class="my-4 border-top py-2">
-						<div class="row">
-							<div class="col-md-2 text-center">
-								{% if user.profile.picture %}
-									<img class="card-img-top" style="max-height: 30%; max-width: 40%; border-radius: 50%" src='{{ user.profile.picture.url }}'>
-									{% else %}
-										<div class="container mt-1 text-center"><i class="fas fa-5x fa-user"></i></div>
-								{% endif %}
-							</div>
-							<div class="col-md-10">
-								<div class="h-100 w-100 d-flex align-items-center justify-items-center">
-									<a href="{% url 'accounts:view-profile' user.username %}">{{ user.first_name }} {{ user.last_name }} </a>
-									 <a class="mx-2 btn btn-light" href="{% url 'accounts:unfollow' user.username %}"> Unfollow <i class="fas fa-user-cogs"></i></a>
-								</div>
-							</div>
-						</div>
-					</div>
-				{% endfor %}
-			</div>
-			<h3 class="py-3 px-2 bg-dark text-light">Follow Friends</h3>
-				<div class="container">
-					{% for user in unfollowed_users %}
-						<div class="my-4 border-top py-2">
-							<div class="row">
-								<div class="col-md-2 text-center">
-									{% if user.profile.picture %}
-										<img class="card-img-top" style="max-height: 30%; max-width: 40%; border-radius: 50%" src='{{ user.profile.picture.url }}'>
-										{% else %}
-											<div class="container mt-1 text-center"><i class="fas fa-5x fa-user"></i></div>
-									{% endif %}
-								</div>
-								<div class="col-md-10">
-									<div class="h-100 w-100 d-flex align-items-center justify-items-center">
-											<a href="{% url 'accounts:view-profile' user.username %}">{{ user.first_name }} {{ user.last_name }} </a>
-										<a class="btn btn-dark mx-3" href="{% url 'accounts:follow' user.username %}"><i class="fas fa-user-plus"></i></a>
-									</div>
-								</div>
-							</div>
-						</div>
-					{% endfor %}
-				</div>
-		</div>
-	</div>
+<main class="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+  <!-- Friends Section -->
+  <section>
+    <h2 class="bg-black text-[#f9f4d7] font-anton text-xl uppercase rounded-md py-2 px-4 mb-6 select-none">
+      Friends
+    </h2>
+    <ul>
+      {% for user in users_followed %}
+      <li class="flex items-center justify-between border-b border-[#555555] pb-4 mb-4">
+        <div class="flex items-center space-x-4">
+          {% if user.profile.picture %}
+            <img alt="Portrait of {{ user.username }}" class="w-12 h-12 rounded-full object-cover" src="{{ user.profile.picture.url }}" />
+          {% else %}
+            <div class="container mt-1 text-center"><i class="fas fa-5x fa-user"></i></div>
+          {% endif %}
+          <span class="text-[#f9f4d7] text-base font-normal select-text">{{ user.first_name }} {{ user.last_name }}</span>
+        </div>
+        <form method="POST" action="{% url 'accounts:unfollow' user.username %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="bg-[#EC6144] text-[#1f1f1f] text-xs font-extrabold uppercase rounded-md px-3 py-1 select-none hover:bg-[#d14e2e] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#d14e2e]">
+            Remove
+          </button>
+        </form>
+      </li>
+      {% empty %}
+      <li class="text-[#aaa]">No friends yet. Loner much?</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <!-- Find People Section -->
+  <section>
+    <h2 class="bg-black text-[#f9f4d7] font-anton text-xl uppercase rounded-md py-2 px-4 mb-6 select-none">
+      Find People
+    </h2>
+    <ul>
+      {% for user in unfollowed_users %}
+      <li class="flex items-center justify-between border-b border-[#555555] pb-4 mb-4">
+        <div class="flex items-center space-x-4">
+          {% if user.profile.picture %}
+            <img alt="Portrait of {{ user.username }}" class="w-12 h-12 rounded-full object-cover" src="{{ user.profile.picture.url }}" />
+          {% else %}
+            <div class="container mt-1 text-center"><i class="fas fa-5x fa-user"></i></div>
+          {% endif %}
+          <span class="text-[#f9f4d7] text-base font-normal select-text">{{ user.first_name }} {{ user.last_name }}</span>
+        </div>
+        <form method="POST" action="{% url 'accounts:follow' user.username %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="bg-[#EC6144] text-[#1f1f1f] text-xs font-extrabold uppercase rounded-md px-3 py-1 select-none hover:bg-[#d14e2e] focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#d14e2e]">
+            Add
+          </button>
+        </form>
+      </li>
+      {% empty %}
+      <li class="text-[#aaa]">No suggestions at the moment.</li>
+      {% endfor %}
+    </ul>
+  </section>
+</main>
 {% endblock %}

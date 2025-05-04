@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, get_user_model, login
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 
 from .forms import ProfileForm, RegistrationForm
@@ -34,32 +34,40 @@ def register(request):
 @login_required
 def profile(request, username):
     """ view profile of user with username """
-
-    user = User.objects.get(username=username)
+    user = get_object_or_404(User, username=username)
     # check if current_user is already following the user
     is_following = request.user.is_following(user)
     return render(request, 'accounts/users_profile.html', {'user': user, 'is_following': is_following})
 
 
 @login_required
-def edit_profile(request):
-    """ edit profile of user """
-    
-    if request.method == "POST":
-        # instance kwargs passed in sets the user on the modelForm
-        form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
-        if form.is_valid():
-            form.save()
-            return redirect(reverse('accounts:view-profile', args=(request.user.username, )))
-    else:
-        form = ProfileForm(instance=request.user.profile)
-    return render(request, 'accounts/edit_profile.html', {'form': form})
+def profile_edit(request):
+    if request.method == 'POST':
+        user = request.user
+        profile = user.profile
+
+        username = request.POST.get('username')
+        if username and username != user.username:
+            user.username = username
+        
+        if 'profile_pic' in request.FILES:
+            profile.profile_pic = request.FILES['profile_pic']
+        
+        profile.bio = request.POST.get('bio', profile.bio)
+        profile.phone = request.POST.get('phone', profile.phone)
+        profile.website = request.POST.get('website', profile.website)
+        profile.location = request.POST.get('address', profile.address)
+
+        user.save()
+        profile.save()
+
+        return redirect('chat:home')  
+
+    return render(request, 'accounts/edit_profile.html')
 
 
 @login_required
 def followers(request):
-    """ Return the lists of friends user is  following and not """
-
     # get users followed by the current_user
     users_followed = request.user.followers.all()
     
@@ -70,14 +78,13 @@ def followers(request):
 
 @login_required
 def follow(request, username):
-    """ Add user with username to current user's following list """
-    
-    request.user.followers.add(User.objects.get(username=username))
+    user_to_follow = get_object_or_404(User, username=username)
+    request.user.followers.add(user_to_follow)
     return redirect('accounts:followers')
 
 
+@login_required
 def unfollow(request, username):
-    """ Remove username from user's following list """
-    
-    request.user.followers.remove(User.objects.get(username=username))
+    user_to_unfollow = get_object_or_404(User, username=username)
+    request.user.followers.remove(user_to_unfollow)
     return redirect('accounts:followers')

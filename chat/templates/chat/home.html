@@ -1,90 +1,226 @@
-{% extends 'base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>Glimpselt</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <style>
+   @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+   .font-anton {
+     font-family: 'Anton', sans-serif;
+   }
+   /* Custom style for logout button black square with arrow */
+   .logout-btn {
+     background-color: #1a1a1a;
+     color: #d9533f;
+     font-weight: 500;
+     font-size: 0.875rem; /* text-sm */
+     padding: 0.25rem 0.5rem; /* py-1 px-2 */
+     border-radius: 0.25rem; /* rounded */
+     display: flex;
+     align-items: center;
+     cursor: pointer;
+   }
+   .logout-btn:hover {
+     background-color: #3a3a3a;
+   }
+   .logout-icon {
+     background-color: #d9533f;
+     color: #1a1a1a;
+     border-radius: 0.125rem; /* rounded-sm */
+     width: 1.25rem; /* w-5 */
+     height: 1.25rem; /* h-5 */
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     margin-left: 0.25rem; /* ml-1 */
+     font-weight: 700;
+   }
+   /* Hide scrollbar but keep scrolling */
+   .no-scrollbar::-webkit-scrollbar {
+     display: none;
+   }
+   .no-scrollbar {
+     -ms-overflow-style: none;  /* IE and Edge */
+     scrollbar-width: none;  /* Firefox */
+   }
+   /* Cursor pointer for comment icon */
+   .comment-icon {
+     cursor: pointer;
+   }
+  </style>
+</head>
+<body class="bg-[#1a1a1a] text-[#F8EAC4] min-h-screen flex flex-col">
+  <header class="bg-[#d9533f] flex justify-between items-center px-6 py-3">
+   <h1 class="font-anton text-2xl text-[#1a1a1a] select-none">
+    glimpselt
+   </h1>
+   <nav class="flex space-x-6 text-[#1a1a1a] font-sans text-sm">
+    <a class="hover:underline" href="{% url 'accounts:followers' %}">
+     Friends
+    </a>
+    <a class="hover:underline" href="{% url 'chat:home' %}">
+     Home
+    </a>
+    <form id="logout-form" method="post" action="{% url 'accounts:logout' %}">
+		{% csrf_token %}
+		<button type="submit" class="logout-btn" aria-label="Logout">
+		  Logout
+		  <span class="logout-icon">
+			<i class="fas fa-arrow-right text-sm"></i>
+		  </span>
+		</button>
+	  </form>	  
+   </nav>
+  </header>
+  <main class="flex gap-6 p-6 max-w-7xl mx-auto w-full flex-1 min-h-0">
+   <!-- Feed + Comments Section (Scrollable, no scrollbar) -->
+   <section class="bg-[#1a1a1a] rounded-md p-4 flex-1 min-w-[320px] max-w-[600px] flex flex-col no-scrollbar overflow-y-auto">
+    <header class="flex justify-between items-center mb-4 flex-shrink-0">
+     <button aria-label="Add new post" id="add-post-btn" class="bg-[#f5f0d3] text-[#1a1a1a] rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold leading-none select-none">
+      +
+     </button>
+     <h2 class="font-anton text-[#F8EAC4] text-lg select-none border-b border-[#4a4a4a] pb-1">
+      FEED
+     </h2>
+    </header>
+    <div id="posts-container" class="flex flex-col space-y-6">
+     {% for post in posts %}
+     <article class="bg-[#1a1a1a] rounded-md p-4 flex flex-col select-none">
+      <h3 class="font-anton text-[#F8EAC4] text-lg border-b border-[#4a4a4a] pb-1 mb-2">
+       {{ post.user.username }}
+      </h3>
+      <div class="mb-2">
+       {% if post.picture %}
+       <img alt="Post image by {{ post.user.username }}" class="w-full rounded border border-[#7a3f33] max-h-48 object-cover" src="{{ post.picture.url }}"/>
+       {% endif %}
+      </div>
+      <p class="text-sm font-sans text-[#F8EAC4] mb-2 caption-text">{{ post.description }}</p>
+      <div class="text-xs text-[#7a7a7a] select-none mb-2 timestamp-text">{{ post.posted_date|date:"F d, Y, g:ia" }}</div>
+      <div class="flex items-center justify-between mb-4">
+       <h4 class="font-anton text-[#F8EAC4] text-lg border-b border-[#4a4a4a] pb-1 m-0">
+        COMMENTS
+       </h4>
+       <div class="relative comment-icon" title="Toggle comments" data-post-id="{{ post.id }}">
+        <i class="fas fa-comment text-[#F8EAC4] text-lg"></i>
+        <span class="absolute -top-1 -right-2 bg-[#d9533f] text-xs rounded-full w-5 h-5 flex items-center justify-center font-sans font-semibold text-[#1a1a1a] comment-count">
+         {{ post.comments.count }}
+        </span>
+       </div>
+      </div>
+      <section class="comments-section bg-[#1a1a1a] rounded-md p-4 flex flex-col select-none">
+       <div class="flex flex-col space-y-2 mb-3 text-xs font-sans text-[#F8EAC4] comments-list">
+        {% for comment in post.comments.all %}
+        <div class="border-b border-[#3a3a3a] pb-1">{{ comment.text }}</div>
+        <div class="text-[#7a7a7a] text-right text-xs">{{ comment.user.username }}, {{ comment.comment_date|date:"F d, Y, g:ia" }}</div>
+        {% endfor %}
+       </div>
+       <form class="flex flex-col space-y-2" action="{% url 'chat:comment_post' post.id %}" method="post">
+        {% csrf_token %}
+        <label class="text-xs font-sans text-[#F8EAC4]" for="comment-input-{{ post.id }}">
+         Say something nice!
+        </label>
+        <textarea class="bg-[#1a1a1a] border border-[#7a3f33] rounded p-2 text-xs font-sans text-[#F8EAC4] resize-none focus:outline-none" name="text" id="comment-input-{{ post.id }}" rows="4"></textarea>
+        <button class="bg-[#d9533f] text-[#1a1a1a] text-xs font-sans font-semibold rounded px-3 py-1 w-max hover:bg-[#c14433]" type="submit">
+         POST
+        </button>
+       </form>
+      </section>
+     </article>
+     {% endfor %}
+    </div>
+   </section>
 
-{% load widget_tweaks %}
-
-
-{% block title %}
-	Feeds
-{% endblock %}
-
-{% block content %}
-	<div class="row">
-		<div class="col-md-8 col-sm-12">
-			<h1 class="py-3 px-2 bg-dark text-light d-flex justify-content-between">News Feed <a href="{% url 'chat:add_post' %}"><i class="fas fa-plus text-light"></i></a></h1>
-			<div class="container bg-grey">
-				{% for post in posts %}
-					<div class=" my-4 card" style="box-shadow: #484646 0px 4px 1px">
-						{% if post.picture %}
-							<div class="card-img-top text-center">
-								<img style="max-width: 99%; height: auto;" src="{{ post.picture.url }}">
-							</div>
-						{% endif %}
-						<div class="card-body">
-							<div class="card-title text-right">
-								{% if post.user == request.user %}
-									<strong>Me</strong>
-								{% else %}
-								<strong>
-									<a class='text-dark' href="{% url 'accounts:view-profile' post.user.username %}">{{ post.user.first_name }} {{ post.user.last_name }}</a>
-								</strong>
-								{% endif %}
-							</div>
-							<div class="card-text">
-								{{ post.text }}
-							</div>
-						</div>
-						<div class="card-footer">
-							<div class="d-flex justify-content-between">
-								<i>{{ post.posted_date }}</i>
-								<a class="btn btn-outline-dark" data-toggle='collapse' href="#comments{{ post.id }}" role="button"  aria-expanded="false" aria-controls="comments{{ post.id }}">
-									<i class="fas fa-2x fa-comment"></i> <span class="badge badge-danger">{{ post.comments.count }}</span>
-								</a>
-							</div>
-							<div class="collapse" id="comments{{ post.id }}">
-								<div class="mt-2 card card-body">
-									{% for comment in post.comments.all %}
-										<code class="blockquote text-center border-bottom" style="font-size: 0.8rem">
-											{{ comment.text }}
-
-											<footer class="blockquote-footer">
-											{% if comment.user == user %}
-												Me
-											{% else %}
-												{{ comment.user.first_name }} {{ comment.user.last_name }}
-											{% endif %}
-												{{ comment.comment_date}}
-											</footer>
-										</code>
-									{% endfor %}
-									<form method="POST" action="{% url 'chat:add_comment' post.id %}">
-										{% csrf_token %}
-										{% for field in comment_form %}
-											<div class="form-group">
-									            {% if field.errors %}
-									              <div class="alert alert-warningalert-dismissible fade show" role='alert'>
-									                {{ field.errors }}
-									                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-									                  <span aria-hidden="true">&times;</span>
-									                </button>
-									              </div>
-									            {% endif %}
-									        
-									            {{ field.label_tag }}
-									            {{ field|add_class:'form-control' }}
-									        </div>
-									    {% endfor %}
-										<input type="submit" value="post" class="btn btn-outline-primary">
-									</form>
-								</div>
-							</div>
-						</div>
-					</div>
-				{% endfor %}
-			</div>
-		</div>
-		<div class="col-md-4">
-			<h3 class="py-3 px-2 bg-dark text-light text-right">Me</h3>
-			{% include 'accounts/profile.html' %}
-		</div>
+<!-- Me Section -->
+<section class="bg-[#1a1a1a] rounded-md p-4 w-72 flex flex-col select-none">
+	<h2 class="font-anton text-[#F8EAC4] text-lg mb-3 border-b border-[#4a4a4a] pb-1 text-right">
+	  ME
+	</h2>
+	<div class="bg-[#222222] rounded-md h-24 w-full flex items-center justify-center mb-4">
+	  {% if request.user.profile.picture %}
+		<img alt="{{ request.user.username }}'s profile picture" class="w-10 h-10 rounded-full" src="{{ request.user.profile.picture.url }}" width="40" height="40"/>
+	  {% else %}
+	  <div class="container mt-1 text-center"><i class="fas fa-9x fa-user"></i></div>
+	  {% endif %}
 	</div>
-{% endblock %}
+	<div class="flex flex-col space-y-1 text-xs font-sans text-[#F8EAC4]">
+	  <input class="bg-[#1a1a1a] border-b border-[#3a3a3a] p-1" type="text" value="{{ request.user.username }}" readonly />
+	  <input class="bg-[#1a1a1a] border-b border-[#3a3a3a] p-1" type="text" value="{{ request.user.profile.bio }}" readonly />
+	  <input class="bg-[#1a1a1a] border-b border-[#3a3a3a] p-1" type="email" value="{{ request.user.email }}" readonly />
+	  <input class="bg-[#1a1a1a] border-b border-[#3a3a3a] p-1" type="text" value="{{ request.user.profile.phone }}" readonly />
+	  <input class="bg-[#1a1a1a] border-b border-[#3a3a3a] p-1" type="text" value="{{ request.user.profile.website }}" readonly />
+	  <input class="bg-[#1a1a1a] border-b border-[#3a3a3a] p-1" type="text" value="{{ request.user.profile.location }}" readonly />
+	</div>
+	<a href="{% url 'accounts:profile_edit' %}" class="mt-4 bg-[#d9533f] text-[#1a1a1a] text-xs font-sans font-semibold rounded px-3 py-1 self-start hover:bg-[#c14433]">
+	  EDIT
+	</a>
+  </section>  
+
+  <!-- Modal for adding new post -->
+  <div id="post-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden">
+    <div class="bg-[#1a1a1a] rounded-md p-6 max-w-md w-full">
+      <h3 class="font-anton text-[#F8EAC4] text-lg border-b border-[#4a4a4a] pb-1 mb-4">ADD NEW POST</h3>
+      <form action="{% url 'chat:create_post' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-4">
+          <label class="text-xs font-sans text-[#F8EAC4] block mb-1" for="post-image">Image</label>
+          <input type="file" id="post-image" name="image" class="bg-[#1a1a1a] border border-[#7a3f33] rounded p-2 text-xs font-sans text-[#F8EAC4] w-full">
+        </div>
+        <div class="mb-4">
+          <label class="text-xs font-sans text-[#F8EAC4] block mb-1" for="post-description">Caption</label>
+          <textarea id="post-description" name="description" rows="4" class="bg-[#1a1a1a] border border-[#7a3f33] rounded p-2 text-xs font-sans text-[#F8EAC4] resize-none focus:outline-none w-full"></textarea>
+        </div>
+        <div class="flex justify-between">
+          <button type="button" id="close-modal" class="bg-[#3a3a3a] text-[#F8EAC4] text-xs font-sans font-semibold rounded px-3 py-1 hover:bg-[#4a4a4a]">CANCEL</button>
+          <button type="submit" class="bg-[#d9533f] text-[#1a1a1a] text-xs font-sans font-semibold rounded px-3 py-1 hover:bg-[#c14433]">POST</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Toggle comments when clicking the comment icon
+    document.querySelectorAll('.comment-icon').forEach(icon => {
+      icon.addEventListener('click', function() {
+        const commentsSection = this.closest('article').querySelector('.comments-section');
+        if (commentsSection.classList.contains('hidden')) {
+          commentsSection.classList.remove('hidden');
+        } else {
+          commentsSection.classList.add('hidden');
+        }
+      });
+    });
+
+    // Initialize comments as visible (remove the 'hidden' class by default)
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.comments-section').forEach(section => {
+      section.classList.add('hidden');
+      });
+    });
+
+    // Add post modal functionality
+    const addPostBtn = document.getElementById('add-post-btn');
+    const postModal = document.getElementById('post-modal');
+    const closeModal = document.getElementById('close-modal');
+
+    addPostBtn.addEventListener('click', () => {
+      postModal.classList.remove('hidden');
+    });
+
+    closeModal.addEventListener('click', () => {
+      postModal.classList.add('hidden');
+    });
+
+    // Upload profile picture button
+    const uploadPicBtn = document.getElementById('upload-pic-btn');
+    const profilePicInput = document.getElementById('profile_pic');
+
+    uploadPicBtn.addEventListener('click', () => {
+      profilePicInput.click();
+    });
+  </script>
+</body>
+</html>
