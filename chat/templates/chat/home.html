@@ -163,15 +163,15 @@
   <div id="post-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden">
     <div class="bg-[#1a1a1a] rounded-md p-6 max-w-md w-full">
       <h3 class="font-anton text-[#F8EAC4] text-lg border-b border-[#4a4a4a] pb-1 mb-4">ADD NEW POST</h3>
-      <form action="{% url 'chat:create_post' %}" method="post" enctype="multipart/form-data">
+      <form action="{% url 'chat:add_post' %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="mb-4">
           <label class="text-xs font-sans text-[#F8EAC4] block mb-1" for="post-image">Image</label>
-          <input type="file" id="post-image" name="image" class="bg-[#1a1a1a] border border-[#7a3f33] rounded p-2 text-xs font-sans text-[#F8EAC4] w-full">
+          <input type="file" id="post-image" name="picture" class="bg-[#1a1a1a] border border-[#7a3f33] rounded p-2 text-xs font-sans text-[#F8EAC4] w-full">
         </div>
         <div class="mb-4">
-          <label class="text-xs font-sans text-[#F8EAC4] block mb-1" for="post-description">Caption</label>
-          <textarea id="post-description" name="description" rows="4" class="bg-[#1a1a1a] border border-[#7a3f33] rounded p-2 text-xs font-sans text-[#F8EAC4] resize-none focus:outline-none w-full"></textarea>
+          <label class="text-xs font-sans text-[#F8EAC4] block mb-1" for="post-text">Caption</label>
+          <textarea id="post-description" name="text" rows="4" class="bg-[#1a1a1a] border border-[#7a3f33] rounded p-2 text-xs font-sans text-[#F8EAC4] resize-none focus:outline-none w-full"></textarea>
         </div>
         <div class="flex justify-between">
           <button type="button" id="close-modal" class="bg-[#3a3a3a] text-[#F8EAC4] text-xs font-sans font-semibold rounded px-3 py-1 hover:bg-[#4a4a4a]">CANCEL</button>

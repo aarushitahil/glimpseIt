@@ -24,28 +24,29 @@ def home(request):
     return render(request, 'chat/home.html', {'posts': posts})
 
 
+from django.shortcuts import render, redirect
+from .forms import PostForm
+from django.contrib.auth.decorators import login_required
+
 @login_required
-def create_post(request):
-    if request.method == 'POST':
-        if 'description' in request.POST:
-            description = request.POST.get('description')
-            picture = request.FILES.get('image')
-            
-            post = Post(user=request.user, description=description)
-            if picture:
-                post.picture = picture
-            post.save()
-            return redirect('chat:home')
-        else:
-            form = PostForm(request.POST, request.FILES)
-            if form.is_valid():
-                post = form.save(commit=False)
-                post.user = request.user
-                post.save()
-                return redirect('chat:home')
-    else:
-        form = PostForm()
-    return render(request, 'chat/add_post.html', {'form': form})
+def add_post(request):
+	""" create a new posts to user """
+	# handle only POSTed Data
+	if request.method == 'POST':
+		form = PostForm(request.POST, request.FILES)
+		# validate form based on form definition
+		if form.is_valid():
+			post = form.save(commit=False)
+			# add the post user to the existing form
+			# this method can be declared in the postForm easily by overiding the save() method
+			# and adding user before saving.
+			# See implementation of CommentForm
+			post.user = request.user
+			post.save()
+			return redirect('chat:home')
+	else:
+		form = PostForm()
+	return render(request, 'chat/add_post.html', {'form': form})
 
 
 @login_required
